@@ -6,7 +6,6 @@
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../src/generated/prisma"
 }
 
 datasource db {
@@ -19,5 +18,12 @@ model User {
   username  String    @unique
   password  String    // hashed
   role      String    @default("user") // admin or user
+  createdAt DateTime  @default(now())
+}
+
+model Invite {
+  id        Int       @id @default(autoincrement())
+  code      String    @unique
+  used      Boolean   @default(false)
   createdAt DateTime  @default(now())
 }
