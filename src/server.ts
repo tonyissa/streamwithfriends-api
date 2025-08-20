@@ -7,6 +7,7 @@ import fastifyCookie from "@fastify/cookie";
 import loadConfig from "./config/loadConfig";
 import adminRouter from "./routes/admin.router";
 import authRouter from "./routes/auth.router";
+import ngrok from "@ngrok/ngrok";
 
 loadConfig();
 
@@ -29,6 +30,10 @@ const start = async () => {
     try {
         await server.listen({ port: 3000 });
         console.log("Server running at http://localhost:3000");
+        const session = await new ngrok.SessionBuilder().authtoken(process.env.NGROK_TOKEN).connect();
+        const listener = await session.httpEndpoint().listen();
+        listener.forward("localhost:3000" );
+        console.log(`Public URL: ${listener.url()}`); // Share this with friends
     } catch (err) {
         server.log.error(err);
         process.exit(1);
@@ -36,3 +41,21 @@ const start = async () => {
 };
   
 start();
+
+process.on('SIGINT', async () => {
+    await server.close();
+    await ngrok.disconnect();
+    process.exit(0);
+});
+
+process.on('SIGTERM', async () => {
+    await server.close();
+    await ngrok.disconnect();
+    process.exit(0);
+});
+
+process.on('SIGKILL', async () => {
+    await server.close();
+    await ngrok.disconnect();
+    process.exit(0);
+});

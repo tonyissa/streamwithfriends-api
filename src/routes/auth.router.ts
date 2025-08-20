@@ -6,7 +6,7 @@ import * as authController from "../controllers/auth.controller";
 export default async function authRouter(server: FastifyInstance) {
     server.get('/verify', { preHandler: requireAuth }, (_req, reply) => reply.code(200))
 
-    server.get<{ Body: RegisterRequest }>('/register', {
+    server.post<{ Body: RegisterRequest }>('/register', {
         schema: {
             body: {
                 type: "object",
@@ -20,7 +20,7 @@ export default async function authRouter(server: FastifyInstance) {
         },
     }, authController.register)
 
-    server.get<{ Body: LoginRequest }>('/login', {
+    server.post<{ Body: LoginRequest }>('/login', {
         schema: {
             body: {
                 type: "object",
