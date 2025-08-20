@@ -2,10 +2,10 @@ import type { FastifyPluginAsync } from "fastify";
 import fastifyPlugin from "fastify-plugin";
 
 const authPlugin: FastifyPluginAsync = async (server) => {
-    server.decorate("user", null);
+    server.decorate("currentUser", null);
     server.addHook("preHandler", async (req) => {
         try {
-            req.user = await req.jwtVerify<{ id: string, role: string }>()
+            req.currentUser = await req.jwtVerify<{ id: number, role: string }>()
         } catch (e) { }
     })
 }
@@ -13,7 +13,7 @@ const authPlugin: FastifyPluginAsync = async (server) => {
 export default fastifyPlugin(authPlugin);
 
 declare module "fastify" {
-    interface fastifyJwt {
-        user: { id: string, role: string };
+    interface FastifyRequest {
+        currentUser: { id: number, role: string };
     }
 }

@@ -5,23 +5,18 @@ import prisma from "./plugins/db";
 import auth from "./plugins/auth";
 import fastifyCookie from "@fastify/cookie";
 import loadConfig from "./config/loadConfig";
+import adminRouter from "./routes/admin.router";
 
 loadConfig();
 
 const server = fastify({ logger: true });
 
 server.register(fastifyCookie);
-server.register(fastifyJwt, { secret: process.env.DATABASE_URL } as FastifyJWTOptions);
-server.register(prisma)
+server.register(fastifyJwt, { secret: process.env.JWT_SECRET } as FastifyJWTOptions);
+server.register(prisma);
 server.register(auth);
 
-server.decorate("authenticate", async (request: FastifyRequest, reply: FastifyReply) => {
-    try {
-        await request.jwtVerify();
-    } catch (err) {
-        reply.code(401).send({ message: "Unauthorized" });
-    }
-});
+server.register(adminRouter, { prefix: '/api/admin' })
 
 const start = async () => {
     try {
