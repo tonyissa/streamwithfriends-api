@@ -15,7 +15,7 @@ export const generateInvite = async (req: FastifyRequest, reply: FastifyReply) =
             }
         })
 
-        return reply.code(200).send(generatedCode);
+        return reply.code(200).send({ code: generatedCode });
     }
 }
 

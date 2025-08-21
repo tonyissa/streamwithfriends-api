@@ -3,9 +3,9 @@ import fastifyPlugin from "fastify-plugin";
 
 const authPlugin: FastifyPluginAsync = async (server) => {
     server.decorate("currentUser", null);
-    server.addHook("preHandler", async (req) => {
+    server.addHook("onRequest", async (req) => {
         try {
-            req.currentUser = await req.jwtVerify<{ id: number, role: string }>()
+            req.currentUser = await req.jwtVerify()
         } catch (e) { }
     })
 }
