@@ -1,6 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import { requireAuth } from "../middlewares/auth";
-import { LoginRequest, RegisterRequest } from "../schemas/User";
+import type { LoginRequest, RegisterRequest } from "../schemas/User";
 import * as authController from "../controllers/auth.controller";
 
 export default async function authRouter(server: FastifyInstance) {

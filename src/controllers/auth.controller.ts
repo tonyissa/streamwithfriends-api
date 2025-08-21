@@ -1,5 +1,5 @@
 import type { FastifyReply, FastifyRequest } from "fastify";
-import { LoginRequest, RegisterRequest } from "../schemas/User";
+import type { LoginRequest, RegisterRequest } from "../schemas/User";
 import bcrypt from "bcrypt"
 
 // For later notes: use ZOD for validation
@@ -25,10 +25,7 @@ export const register = async (req: FastifyRequest<{ Body: RegisterRequest }>, r
     return reply
         .setCookie('token', token, { httpOnly: true, sameSite: true })
         .code(200)
-        .send({
-            username: user.username,
-            role: user.role
-        });
+        .send({ username: user.username, role: user.role });
 }
 
 export const login = async (req: FastifyRequest<{ Body: LoginRequest }>, reply: FastifyReply) => {
@@ -47,8 +44,5 @@ export const login = async (req: FastifyRequest<{ Body: LoginRequest }>, reply: 
     return reply
         .setCookie('token', token, { httpOnly: true, sameSite: true })
         .code(200)
-        .send({ 
-            username: user.username,
-            role: user.role
-        });
+        .send({ username: user.username, role: user.role });
 }

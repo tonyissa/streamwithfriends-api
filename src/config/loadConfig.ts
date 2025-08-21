@@ -20,6 +20,8 @@ declare global {
             DATABASE_URL: string;
             JWT_SECRET: string;
             NGROK_TOKEN: string;
+            ADMIN_USERNAME: string;
+            ADMIN_PASS: string;
         }
     }
 }

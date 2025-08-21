@@ -5,6 +5,7 @@
   "type": "commonjs",
   "scripts": {
     "dev": "nodemon ./src/server.ts",
+    "seed": "tsc && node ./dist/utils/seedDB.js",
     "build": "tsc",
     "start": "tsc && node ./dist/server.js"
   },

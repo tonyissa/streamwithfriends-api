@@ -8,29 +8,12 @@ import adminRouter from "./routes/admin.router";
 import authRouter from "./routes/auth.router";
 import ngrok from "@ngrok/ngrok";
 import cors from "@fastify/cors";
+import originCB from "./utils/originCb";
 
 loadConfig();
 const server = fastify({ logger: true });
 
-server.register(cors, {
-  credentials: true,
-  origin: (origin, cb) => {
-    const allowed = [
-      "https://streamwithfriends.vercel.app",
-      "http://localhost:5173"
-    ];
-    const ngrokRegex = /^https:\/\/[a-z0-9-]+\.ngrok-free\.app$/;
-    if (!origin) {
-      cb(null, true);
-      return;
-    }
-    if (allowed.includes(origin) || ngrokRegex.test(origin)) {
-      cb(null, origin);
-    } else {
-      cb(new Error("Not allowed"), false);
-    }
-  }
-});
+server.register(cors, { credentials: true, origin: originCB });
 server.register(fastifyCookie);
 server.register(fastifyJwt, { secret: process.env.JWT_SECRET, cookie: { cookieName: "token", signed: false } });
 server.register(prisma);
@@ -41,7 +24,7 @@ server.register(authRouter, { prefix: '/api/auth' })
 
 server.setErrorHandler((error, _request, reply) => {
     server.log.error(error);
-    reply.status(500).send({ error: 'Something went wrong' });
+    reply.status(500).send({ message: 'Something went wrong' });
 });
 
 server.get("/api/health", (_req, reply) => reply.code(200));
@@ -59,7 +42,7 @@ const start = async () => {
         process.exit(1);
     }
 };
-  
+
 start();
 
 process.on('SIGINT', async () => {
