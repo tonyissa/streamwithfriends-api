@@ -11,7 +11,7 @@ import cors from "@fastify/cors";
 import originCB from "./utils/originCb";
 
 loadConfig();
-const server = fastify({ logger: true });
+const server = fastify({ logger: true, trustProxy: true });
 
 server.register(cors, { credentials: true, origin: originCB, exposedHeaders: "Streamwithfriends" });
 server.register(fastifyCookie);

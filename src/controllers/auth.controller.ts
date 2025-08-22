@@ -22,8 +22,10 @@ export const register = async (req: FastifyRequest<{ Body: RegisterRequest }>, r
         return reply.code(400).send({ message: "There was an error with this request" });
 
     const token = req.server.jwt.sign({ id: user.id, username: user.username, role: user.role });
+    const oneMonthLater = Date.now() + (1000 * 60 * 60 * 24 * 30)
+
     return reply
-        .setCookie('token', token, { httpOnly: true, sameSite: "none" })
+        .setCookie('token', token, { httpOnly: true, secure: true, sameSite: "none", maxAge: oneMonthLater })
         .code(200)
         .send({ username: user.username, role: user.role });
 }
@@ -41,8 +43,10 @@ export const login = async (req: FastifyRequest<{ Body: LoginRequest }>, reply: 
         return reply.code(400).send({ message: "Login request failed" });
 
     const token = req.server.jwt.sign({ id: user.id, username: user.username, role: user.role });
+    const oneMonthLater = Date.now() + (60 * 60 * 24 * 60)
+
     return reply
-        .setCookie('token', token, { httpOnly: true, sameSite: "none" })
+        .setCookie('token', token, { httpOnly: true, secure: true, sameSite: "none", maxAge: oneMonthLater })
         .code(200)
         .send({ username: user.username, role: user.role });
 }

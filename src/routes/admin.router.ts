@@ -1,5 +1,5 @@
 import type { FastifyInstance, RouteHandler, RouteHandlerMethod } from "fastify";
-import { requireAdmin } from "../middlewares/auth";
+import { requireAdmin } from "../middlewares/auth.middleware";
 import * as adminController from "../controllers/admin.controller";
 import { DeleteRequest } from "../schemas/Admin";
 

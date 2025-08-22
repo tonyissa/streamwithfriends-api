@@ -1,5 +1,5 @@
 import type { FastifyInstance } from "fastify";
-import { requireAuth } from "../middlewares/auth";
+import { requireAuth } from "../middlewares/auth.middleware";
 import type { LoginRequest, RegisterRequest } from "../schemas/User";
 import * as authController from "../controllers/auth.controller";
 
