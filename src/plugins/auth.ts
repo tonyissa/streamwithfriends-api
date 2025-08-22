@@ -14,6 +14,6 @@ export default fastifyPlugin(authPlugin);
 
 declare module "fastify" {
     interface FastifyRequest {
-        currentUser: { id: number, role: string };
+        currentUser: { id: number, username: string, role: string };
     }
 }

@@ -13,7 +13,7 @@ import originCB from "./utils/originCb";
 loadConfig();
 const server = fastify({ logger: true });
 
-server.register(cors, { credentials: true, origin: originCB });
+server.register(cors, { credentials: true, origin: originCB, exposedHeaders: "Streamwithfriends" });
 server.register(fastifyCookie);
 server.register(fastifyJwt, { secret: process.env.JWT_SECRET, cookie: { cookieName: "token", signed: false } });
 server.register(prisma);
@@ -27,7 +27,7 @@ server.setErrorHandler((error, _request, reply) => {
     reply.status(500).send({ message: 'Something went wrong' });
 });
 
-server.get("/api/health", (_req, reply) => reply.code(200));
+server.get("/api/health", (_req, reply) => reply.header("Streamwithfriends", "true").code(200).send());
 
 const start = async () => {
     try {

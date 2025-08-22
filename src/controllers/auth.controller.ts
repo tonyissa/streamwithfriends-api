@@ -21,9 +21,9 @@ export const register = async (req: FastifyRequest<{ Body: RegisterRequest }>, r
     if (!user)
         return reply.code(400).send({ message: "There was an error with this request" });
 
-    const token = req.server.jwt.sign({ id: user.id, role: user.role });
+    const token = req.server.jwt.sign({ id: user.id, username: user.username, role: user.role });
     return reply
-        .setCookie('token', token, { httpOnly: true, sameSite: true })
+        .setCookie('token', token, { httpOnly: true, sameSite: "none" })
         .code(200)
         .send({ username: user.username, role: user.role });
 }
@@ -40,9 +40,9 @@ export const login = async (req: FastifyRequest<{ Body: LoginRequest }>, reply: 
     if (!validPassword)
         return reply.code(400).send({ message: "Login request failed" });
 
-    const token = req.server.jwt.sign({ id: user.id, role: user.role });
+    const token = req.server.jwt.sign({ id: user.id, username: user.username, role: user.role });
     return reply
-        .setCookie('token', token, { httpOnly: true, sameSite: true })
+        .setCookie('token', token, { httpOnly: true, sameSite: "none" })
         .code(200)
         .send({ username: user.username, role: user.role });
 }
