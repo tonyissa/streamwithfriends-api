@@ -34,7 +34,7 @@ const start = async () => {
         await server.listen({ port: 3000 });
         console.log("Server running at http://localhost:3000");
         const session = await new ngrok.SessionBuilder().authtoken(process.env.NGROK_TOKEN).connect();
-        const listener = await session.httpEndpoint().listen();
+        const listener = await session.httpEndpoint().domain(process.env.NGROK_STATIC_URL).listen();
         console.log(`Public URL: ${listener.url()}`);
         await listener.forward("localhost:3000");
     } catch (err) {
