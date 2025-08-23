@@ -35,4 +35,6 @@ export default async function authRouter(server: FastifyInstance) {
             }
         },
     }, authController.login)
+
+    server.get("/request-watch-access", { preHandler: requireAuth }, authController.requestWatchAccess)
 }

@@ -2,7 +2,7 @@ import type { FastifyReply, FastifyRequest } from "fastify";
 import type { LoginRequest, RegisterRequest } from "../schemas/User";
 import bcrypt from "bcrypt"
 
-// For later notes: use ZOD for validation
+// For later use ZOD for validation
 export const register = async (req: FastifyRequest<{ Body: RegisterRequest }>, reply: FastifyReply) => {
     const { username, password, inviteCode } = req.body;
     var invite = await req.server.prisma.invite.findUnique({ where: { code: inviteCode, used: false } });
@@ -49,4 +49,10 @@ export const login = async (req: FastifyRequest<{ Body: LoginRequest }>, reply: 
         .setCookie('token', token, { httpOnly: true, secure: true, sameSite: "none", maxAge: oneMonthLater, path: "/" })
         .code(200)
         .send({ username: user.username, role: user.role });
+}
+
+export const requestWatchAccess = async (req: FastifyRequest, reply: FastifyReply) => {
+    const viewerToken = req.server.livekit.createAccessToken(req.currentUser.username);
+    req.server.log.info(`Watch request granted to user ${req.currentUser.username}`);
+    return reply.code(200).send({ viewerToken })
 }

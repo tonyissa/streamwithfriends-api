@@ -19,12 +19,12 @@ export const generateInvite = async (req: FastifyRequest, reply: FastifyReply) =
     }
 }
 
-export const deleteAccount = async (req: FastifyRequest<{ Body: DeleteRequest }>, reply: FastifyReply) => {
-    let banID = req.body.id;
-    let banned = await req.server.prisma.user.delete({ where: { id: banID } });
+// export const deleteAccount = async (req: FastifyRequest<{ Body: DeleteRequest }>, reply: FastifyReply) => {
+//     let banID = req.body.id;
+//     let banned = await req.server.prisma.user.delete({ where: { id: banID } });
 
-    if (banned)
-        return reply.code(200).send({ id: banned.id });
-    else
-        return reply.code(404).send({ message: "User not found" });
-}
+//     if (banned)
+//         return reply.code(200).send({ id: banned.id });
+//     else
+//         return reply.code(404).send({ message: "User not found" });
+// }

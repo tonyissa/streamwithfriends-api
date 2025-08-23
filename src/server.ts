@@ -9,6 +9,7 @@ import authRouter from "./routes/auth.router";
 import ngrok from "@ngrok/ngrok";
 import cors from "@fastify/cors";
 import originCB from "./utils/originCb";
+import livekit from "./plugins/livekit";
 
 loadConfig();
 const server = fastify({ logger: true, trustProxy: true });
@@ -18,6 +19,7 @@ server.register(fastifyCookie);
 server.register(fastifyJwt, { secret: process.env.JWT_SECRET, cookie: { cookieName: "token", signed: false } });
 server.register(prisma);
 server.register(auth);
+server.register(livekit);
 
 server.register(adminRouter, { prefix: '/api/admin' });
 server.register(authRouter, { prefix: '/api/auth' });

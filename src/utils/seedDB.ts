@@ -16,7 +16,7 @@ export default async function seedDB() {
             password: hashed,
             role: "admin"
         }
-    })
+    });
     console.log("Admin account created");
 }
 
