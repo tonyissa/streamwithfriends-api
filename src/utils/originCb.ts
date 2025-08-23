@@ -8,14 +8,15 @@ interface ArrayOfValueOrArray<T> extends Array<ValueOrArray<T>> {
 export default function originCB(origin: string | undefined, cb: OriginCallback): void {
     const allowed = [
         "https://streamwithfriends.vercel.app",
-        "http://localhost:5173"
+        "http://localhost:5173",
+        `https://${process.env.NGROK_STATIC_URL}`
       ];
-      const ngrokRegex = /^https:\/\/[a-z0-9-]+\.ngrok-free\.app$/;
+
       if (!origin) {
         cb(null, true);
         return;
       }
-      if (allowed.includes(origin) || ngrokRegex.test(origin)) {
+      if (allowed.includes(origin)) {
         cb(null, origin);
       } else {
         cb(new Error("Not allowed"), false);

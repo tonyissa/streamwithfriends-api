@@ -19,8 +19,8 @@ server.register(fastifyJwt, { secret: process.env.JWT_SECRET, cookie: { cookieNa
 server.register(prisma);
 server.register(auth);
 
-server.register(adminRouter, { prefix: '/api/admin' })
-server.register(authRouter, { prefix: '/api/auth' })
+server.register(adminRouter, { prefix: '/api/admin' });
+server.register(authRouter, { prefix: '/api/auth' });
 
 server.setErrorHandler((error, _request, reply) => {
     server.log.error(error);
