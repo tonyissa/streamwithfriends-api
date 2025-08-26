@@ -7,32 +7,51 @@ export default fastifyPlugin((server) => {
     server.decorate('ffmpeg', null);
 
     server.addHook("onReady", () => {
-        const RTMP_URL = `${server.ingress!.url}/${server.ingress!.streamKey}`;
-        console.log("Spawning ffmpeg child process");
-        const ffmpegProcess = spawn("ffmpeg", [
-            '-re',
+        const RTMPS_URL = `${server.ingress!.url}/${server.ingress!.streamKey}`;
+        const ffmpegArgs = [
+            // Input 1: Try to grab the live HTTP stream
+            // '-reconnect', '1',
+            // '-reconnect_streamed', '1',
+            // '-reconnect_delay_max', '2',
             '-i', STREAM_URL,
-            // Video settings
-            '-c:v', 'libx264',            // use H.264
-            '-preset', 'veryfast',        // encoding speed/efficiency tradeoff
-            '-pix_fmt', 'yuv420p',
-            '-g', '60',                   // GOP size (2s at 30fps)
-            '-r', '30',                   // frame rate
-            '-b:v', '2500k',              // video bitrate
-            '-maxrate', '2500k',
-            '-bufsize', '5000k',
 
-            // Audio settings
-            '-c:a', 'aac',                // AAC audio
-            '-ar', '44100',               // sample rate
-            '-b:a', '128k',               // audio bitrate
-            '-ac', '2',    
-            "-filter:a", "aresample=async=1:min_hard_comp=0.100:first_pts=0",
+            // Input 2: Black video filler
+            '-f', 'lavfi',
+            '-i', 'color=size=1280x720:rate=30:color=black',
 
-            // Output
+            // Input 3: Silent audio filler
+            '-f', 'lavfi',
+            '-i', 'anullsrc=channel_layout=stereo:sample_rate=44100',
+
+            // Choose which inputs to overlay: if main video is missing, fallback
+            '-filter_complex',
+            '[0:v]scale=1280:720:force_original_aspect_ratio=decrease[pv];' +
+            '[1:v][pv]overlay=shortest=1:format=auto[outv];' +
+            '[0:a][2:a]amix=inputs=2:dropout_transition=3[outa]',
+
+            // Map final outputs
+            '-map', '[outv]',
+            '-map', '[outa]',
+
+            // Encoding
+            '-c:v', 'libx264',
+            '-c:a', 'aac',
+            // '-g', '60',             // GOP size (2s at 30fps)
+            // '-r', '30',             // frame rate
+            '-preset', 'veryfast',  // veryfast, fast, medium
+            '-b:v', '2500k',        // 3500k, 4000k, 4500k
+            '-maxrate', '2500k',    // 3500k, 4000k, 4500k
+            '-bufsize', '7000k',    // 7500k, 8000k, 8500k
+            '-ar', '44100',         // 44100, 48000
+            '-b:a', '128k',         // 128k, 160k, 220k
+
+            // Output to RTMP server
             '-f', 'flv',
-            RTMP_URL
-        ]);
+            RTMPS_URL
+        ];
+
+        console.log("Spawning ffmpeg child process");
+        const ffmpegProcess = spawn("ffmpeg", ffmpegArgs);
         
         ffmpegProcess.stdout.on('data', (data) => {
             console.log('FFmpeg stdout:', data.toString());
