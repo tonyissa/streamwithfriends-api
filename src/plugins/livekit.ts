@@ -1,6 +1,6 @@
 import { RoomServiceClient, AccessToken, IngressClient, IngressInput, IngressInfo } from "livekit-server-sdk";
-import fp from "fastify-plugin";
 import { FastifyPluginAsync } from "fastify";
+import fastifyPlugin from "fastify-plugin";
 
 const identityCache = new Map<string, string>();
 const roomService = new RoomServiceClient(
@@ -18,7 +18,7 @@ const ingress = {
     enableTranscoding: true
 }
 
-const livekit: FastifyPluginAsync = async (server) => {
+const livekitPlugin: FastifyPluginAsync = async (server) => {
     server.decorate("ingress", null);
     server.addHook("onReady", async () => {
         (await ingressClient.listIngress()).forEach(async ingress => await ingressClient.deleteIngress(ingress.ingressId));
@@ -54,7 +54,7 @@ const livekit: FastifyPluginAsync = async (server) => {
     })
 };
 
-export default fp(livekit);
+export default fastifyPlugin(livekitPlugin);
 
 declare module "fastify" {
     interface FastifyInstance {
