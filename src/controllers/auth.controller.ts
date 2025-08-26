@@ -52,7 +52,7 @@ export const login = async (req: FastifyRequest<{ Body: LoginRequest }>, reply: 
 }
 
 export const requestWatchAccess = async (req: FastifyRequest, reply: FastifyReply) => {
-    const viewerToken = req.server.livekit.createAccessToken(req.currentUser.username);
+    const viewerToken = await req.server.livekit.createAccessToken(req.currentUser.username);
     req.server.log.info(`Watch request granted to user ${req.currentUser.username}`);
-    return reply.code(200).send({ viewerToken })
+    return reply.code(200).send({ viewerToken });
 }

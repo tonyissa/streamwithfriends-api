@@ -10,6 +10,7 @@ import ngrok from "@ngrok/ngrok";
 import cors from "@fastify/cors";
 import originCB from "./utils/originCb";
 import livekit from "./plugins/livekit";
+import ffmpeg from './plugins/ffmpeg';
 
 loadConfig();
 const server = fastify({ logger: true, trustProxy: true });
@@ -20,6 +21,7 @@ server.register(fastifyJwt, { secret: process.env.JWT_SECRET, cookie: { cookieNa
 server.register(prisma);
 server.register(auth);
 server.register(livekit);
+server.register(ffmpeg)
 
 server.register(adminRouter, { prefix: '/api/admin' });
 server.register(authRouter, { prefix: '/api/auth' });
@@ -39,6 +41,7 @@ const start = async () => {
         const listener = await session.httpEndpoint().domain(process.env.NGROK_STATIC_URL).listen();
         console.log(`Public URL: ${listener.url()}`);
         await listener.forward("localhost:3000");
+        
     } catch (err) {
         server.log.error(err);
         process.exit(1);
@@ -59,7 +62,7 @@ process.on('SIGTERM', async () => {
     process.exit(0);
 });
 
-process.on('SIGKILL', async () => {
+process.on('exit', async () => {
     await server.close();
     await ngrok.disconnect();
     process.exit(0);
