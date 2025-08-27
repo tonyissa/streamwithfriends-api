@@ -66,20 +66,26 @@ async function checkStream(streamURL: string, server: FastifyInstance): Promise<
 const getRealArgs = (streamURL: string, whipURL: string) => [
     "-re",
     '-i', streamURL,
-    "-c:v", "libvpx",
-    "-c:a", "libopus",
-    "-f", "webm",
+    "-c:v", "libx264",
+    "-preset", "veryfast",
+    "-tune", "zerolatency",
+    "-c:a", "aac",
+    "-f", "whip",
     whipURL
 ];
 
 const getBlankArgs = (whipURL: string) => [
+    "-re",
     "-f", "lavfi",
-    "-i", "color=c=black:s=1280x720:r=30",
+    "-i", "color=size=1280x720:rate=30:color=black",
     "-f", "lavfi",
     "-i", "anullsrc=channel_layout=stereo:sample_rate=44100",
-    "-c:v", "libvpx",
-    "-c:a", "libopus",
-    "-f", "webm",
+    "-c:v", "libx264",
+    "-preset", "veryfast",
+    "-tune", "zerolatency",
+    "-c:a", "aac",
+    "-shortest",
+    "-f", "whip",
     whipURL
 ];
 
