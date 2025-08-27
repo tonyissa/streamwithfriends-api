@@ -15,16 +15,16 @@ const ingress = {
     roomName: "movie-room",
     participantIdentity: "movie-stream",
     participantName: "Movie Stream",
-    enableTranscoding: true
-}
+    enableTranscoding: false
+};
 
 const livekitPlugin: FastifyPluginAsync = async (server) => {
     server.decorate("ingress", null);
     server.addHook("onReady", async () => {
-        (await ingressClient.listIngress()).forEach(async ingress => await ingressClient.deleteIngress(ingress.ingressId));
+        // (await ingressClient.listIngress()).forEach(async ingress => await ingressClient.deleteIngress(ingress.ingressId));
         await roomService.createRoom({ name: "movie-room", emptyTimeout: 60 * 5, departureTimeout: 60 * 5 });
         server.log.info("Livekit room 'movie-room' created");
-        const ingressInfo = await ingressClient.createIngress(IngressInput.RTMP_INPUT, ingress);
+        const ingressInfo = await ingressClient.createIngress(IngressInput.WHIP_INPUT, ingress);
         server.log.info("Livekit ingress 'movie-ingress' created");
         server.ingress = ingressInfo;
     })
