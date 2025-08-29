@@ -12,6 +12,9 @@ export default async function ffmpegManager(server: FastifyInstance, streamURL: 
     let timerOptimization = false;
 
     while (true) {
+        const ingress = await server.getIngress();
+        console.log(ingress.state);
+
         if (ff.type === "blank") {
             const streamExists = await checkStream(streamURL, server);
             if (streamExists) {
@@ -64,17 +67,26 @@ async function checkStream(streamURL: string, server: FastifyInstance): Promise<
 }
 
 const getRealArgs = (streamURL: string, whipURL: string) => [
+    "-report",
+    "-loglevel", "debug",
     "-re",
     '-i', streamURL,
     "-c:v", "libx264",
+    "-profile:v", "baseline",
     "-preset", "veryfast",
+    "-level", "3.1",
+    "-pix-fmt", "yuv420p",
     "-tune", "zerolatency",
-    "-c:a", "aac",
+    "-c:a", "libopus",
+    "-ar", "48000",
+    "-ac", "2",
     "-f", "whip",
     whipURL
 ];
 
 const getBlankArgs = (whipURL: string) => [
+    "-report",
+    "-loglevel", "debug",
     "-re",
     "-f", "lavfi",
     "-i", "color=size=1280x720:rate=30:color=black",
@@ -83,7 +95,7 @@ const getBlankArgs = (whipURL: string) => [
     "-c:v", "libx264",
     "-preset", "veryfast",
     "-tune", "zerolatency",
-    "-c:a", "aac",
+    "-c:a", "libopus",
     "-shortest",
     "-f", "whip",
     whipURL

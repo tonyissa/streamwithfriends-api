@@ -13,7 +13,7 @@ import livekit from "./plugins/livekit";
 import ffmpeg from './plugins/ffmpeg';
 
 loadConfig();
-const server = fastify({ logger: true, trustProxy: true });
+const server = fastify({ logger: { level: "debug" }, trustProxy: true });
 
 server.register(cors, { credentials: true, origin: originCB, exposedHeaders: "Streamwithfriends" });
 server.register(fastifyCookie);
@@ -21,7 +21,7 @@ server.register(fastifyJwt, { secret: process.env.JWT_SECRET, cookie: { cookieNa
 server.register(prisma);
 server.register(auth);
 server.register(livekit);
-server.register(ffmpeg)
+server.register(ffmpeg);
 
 server.register(adminRouter, { prefix: '/api/admin' });
 server.register(authRouter, { prefix: '/api/auth' });
