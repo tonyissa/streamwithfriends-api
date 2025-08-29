@@ -12,6 +12,9 @@ export default async function ffmpegManager(server: FastifyInstance, streamURL: 
     let timerOptimization = false;
 
     while (true) {
+        const ingress = await server.getIngress();
+        console.log(ingress.state);
+
         if (ff.type === "blank") {
             const streamExists = await checkStream(streamURL, server);
             if (streamExists) {

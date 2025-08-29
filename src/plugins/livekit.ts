@@ -10,7 +10,7 @@ const roomService = new RoomServiceClient(
 );
 
 const ingressClient = new IngressClient(process.env.LIVEKIT_HOST_URL, process.env.LIVEKIT_API_KEY, process.env.LIVEKIT_API_SECRET);
-const ingress = {
+const ingressOpts = {
     name: "movie-ingress",
     roomName: "movie-room",
     participantIdentity: "movie-stream",
@@ -19,15 +19,17 @@ const ingress = {
 }
 
 const livekitPlugin: FastifyPluginAsync = async (server) => {
-    server.decorate("ingress", null);
+    server.decorate("getIngress");
     server.addHook("onReady", async () => {
-        (await ingressClient.listIngress()).forEach(async ingress => await ingressClient.deleteIngress(ingress.ingressId));
         await roomService.createRoom({ name: "movie-room", emptyTimeout: 60 * 5, departureTimeout: 60 * 5 });
         server.log.info("Livekit room 'movie-room' created");
-        const ingressInfo = await ingressClient.createIngress(IngressInput.RTMP_INPUT, ingress);
+        const ingress = await ingressClient.createIngress(IngressInput.RTMP_INPUT, ingressOpts);
         server.log.info("Livekit ingress 'movie-ingress' created");
-        server.ingress = ingressInfo;
-    })
+        server.getIngress = async () => {
+            const ingresses = await ingressClient.listIngress("movie-room");
+            return ingresses.find(i => i.ingressId === ingress.ingressId)!;
+        }
+    });
 
     server.decorate("livekit", {
         createAccessToken: async (identity: string) => {
@@ -47,10 +49,11 @@ const livekitPlugin: FastifyPluginAsync = async (server) => {
     });
 
     server.addHook("onClose", async () => {
+        const ingress = await server.getIngress();
+        await ingressClient.deleteIngress(ingress.ingressId);
+        server.log.info("Livekit ingress closed");
         await roomService.deleteRoom("movie-room");
         server.log.info("Livekit 'movie-room' deleted");
-        await ingressClient.deleteIngress(server.ingress!.ingressId);
-        server.log.info("Livekit ingress closed");
     })
 };
 
@@ -61,6 +64,6 @@ declare module "fastify" {
         livekit: {
             createAccessToken: (identity: string) => Promise<string>;
         };
-        ingress: IngressInfo | null
+        getIngress: () => Promise<IngressInfo>;
     }
 }

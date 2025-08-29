@@ -4,8 +4,9 @@ import fastifyPlugin from "fastify-plugin";
 import ffmpegManager from "../utils/ffmpegManager";
 
 function ffmpegPlugin(server: FastifyInstance) {
-    server.addHook('onReady', () => {
-        const RTMPS_URL = `${server.ingress!.url}/${server.ingress!.streamKey}`;
+    server.addHook('onReady', async () => {
+        const ingress = await server.getIngress();
+        const RTMPS_URL = `${ingress.url}/${ingress.streamKey}`;
         ffmpegManager(server, process.env.LOCAL_STREAM_URL, RTMPS_URL)
             .catch(err => server.log.error(err));
     })
