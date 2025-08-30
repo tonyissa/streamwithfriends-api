@@ -1,58 +1,86 @@
 import { ChildProcessWithoutNullStreams, spawn } from "child_process";
 import { FastifyInstance } from "fastify";
 
-export default async function ffmpegManager(server: FastifyInstance, streamURL: string, whipURL: string) {
-    const realArgs = getRealArgs(streamURL, whipURL);
-    const blankArgs = getBlankArgs(whipURL);
+const { INGRESS_STREAM_URL, EGRESS_STREAM_URL } = process.env;
 
-    let ff: ffProcess = {
+const realArgs = [
+    "-re",
+    '-i', INGRESS_STREAM_URL,
+    "-c:v", "libx264",
+    "-preset", "veryfast",
+    "-tune", "zerolatency",
+    "-c:a", "libopus",
+    "-ar", "44100",
+    "-b:a", "128k",
+    "-ac", "2",
+    "-f",  "mpegts",
+    EGRESS_STREAM_URL
+];
+
+const blankArgs = [
+    "-re",
+    "-f", "lavfi",
+    "-i", "color=size=1920x1080:rate=30:color=black",
+    "-f", "lavfi",
+    "-i", "anullsrc=channel_layout=stereo:sample_rate=44100",
+    "-c:v", "libx264",
+    "-preset", "veryfast",
+    "-tune", "zerolatency",
+    "-c:a", "libopus",
+    "-ar", "44100",
+    "-b:a", "128k",
+    "-ac", "2",
+    "-shortest",
+    "-f", "mpegts",
+    EGRESS_STREAM_URL
+];
+
+let ff: ffContainer;
+
+export default async function ffmpegManager(server: FastifyInstance) {
+    await startBlankStream();
+    await tryStartRealStream();
+}
+
+async function startBlankStream() {
+    ff = {
         type: "blank",
-        process: spawn("C:\\TEMP\\ffmpeg", blankArgs)
+        process: spawn("ffmpeg", blankArgs)
     }
-    let timerOptimization = false;
+}
 
+async function tryStartRealStream() {
     while (true) {
-        const ingress = await server.getIngress();
-        console.log(ingress.state);
-
         if (ff.type === "blank") {
-            const streamExists = await checkStream(streamURL, server);
+            const streamExists = await checkStream();
             if (streamExists) {
                 ff.process.kill("SIGINT");
                 ff = {
                     type: "real",
-                    process: spawn("C:\\TEMP\\ffmpeg", realArgs)
+                    process: spawn("ffmpeg", realArgs)
                 };
 
-                ff.process.on("exit", () => {
+                ff.process.on("exit", async () => {
                     ff = {
                         type: "blank",
-                        process: spawn("C:\\TEMP\\ffmpeg", blankArgs)
+                        process: spawn("ffmpeg", blankArgs)
                     };
-                    
-                    timerOptimization = true;
-                })
-
-                ff.process.stderr.on("data", (data) => console.log(data));
+                    await tryStartRealStream();
+                });
+                break;
             }
         }
-        
-        if (timerOptimization) {
-            timerOptimization = false;
-            continue;
-        }
-
-        await new Promise((resolve) => setTimeout(resolve, 5000));
+        await new Promise((resolve) => setTimeout(resolve, 1000));
     }
 }
 
-async function checkStream(streamURL: string, server: FastifyInstance): Promise<boolean> {
+async function checkStream(): Promise<boolean> {
     return new Promise((resolve) => {
-        const probe = spawn("C:\\TEMP\\ffprobe", [
+        const probe = spawn("ffprobe", [
             "-v", "error",
             "-show_entries", "format=duration",
             "-of", "default=noprint_wrappers=1:nokey=1",
-            streamURL
+            INGRESS_STREAM_URL
         ])
 
         probe.on('close', (code) => {
@@ -60,48 +88,13 @@ async function checkStream(streamURL: string, server: FastifyInstance): Promise<
         })
 
         probe.on('error', (error) => {
-            server.log.error("ffprobe error: " + error.message)
+            console.error(error)
             resolve(false);
         })
     })
 }
 
-const getRealArgs = (streamURL: string, whipURL: string) => [
-    "-report",
-    "-loglevel", "debug",
-    "-re",
-    '-i', streamURL,
-    "-c:v", "libx264",
-    "-profile:v", "baseline",
-    "-preset", "veryfast",
-    "-level", "3.1",
-    "-pix-fmt", "yuv420p",
-    "-tune", "zerolatency",
-    "-c:a", "libopus",
-    "-ar", "48000",
-    "-ac", "2",
-    "-f", "whip",
-    whipURL
-];
-
-const getBlankArgs = (whipURL: string) => [
-    "-report",
-    "-loglevel", "debug",
-    "-re",
-    "-f", "lavfi",
-    "-i", "color=size=1280x720:rate=30:color=black",
-    "-f", "lavfi",
-    "-i", "anullsrc=channel_layout=stereo:sample_rate=44100",
-    "-c:v", "libx264",
-    "-preset", "veryfast",
-    "-tune", "zerolatency",
-    "-c:a", "libopus",
-    "-shortest",
-    "-f", "whip",
-    whipURL
-];
-
-interface ffProcess {
+interface ffContainer {
     type: "blank" | "real";
     process: ChildProcessWithoutNullStreams;
 }
