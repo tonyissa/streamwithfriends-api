@@ -1,43 +1,29 @@
 import { ChildProcessWithoutNullStreams, spawn } from "child_process";
-import { FastifyInstance } from "fastify";
 
-const { INGRESS_STREAM_URL, EGRESS_STREAM_URL } = process.env;
+const { LOCAL_STREAM_URL, OUT_AUDIO_STREAM, OUT_VIDEO_STREAM } = process.env;
 
 const realArgs = [
-    "-re",
-    '-i', INGRESS_STREAM_URL,
-    "-c:v", "libx264",
-    "-preset", "veryfast",
-    "-tune", "zerolatency",
-    "-c:a", "libopus",
-    "-ar", "44100",
-    "-b:a", "128k",
-    "-ac", "2",
-    "-f",  "mpegts",
-    EGRESS_STREAM_URL
+    '-re',
+    '-i', LOCAL_STREAM_URL,
+    '-c:v', 'libx264', '-preset', 'veryfast', '-tune', 'zerolatency', '-g', '60', '-b:v', '3500k',
+    '-c:a', 'libopus', '-b:a', '128k', '-ar', '48000', '-ac', '2',
+    '-f', 'rtp', '-payload_type', '96', OUT_VIDEO_STREAM,
+    '-f', 'rtp', '-payload_type', '111', OUT_AUDIO_STREAM
 ];
 
 const blankArgs = [
-    "-re",
-    "-f", "lavfi",
-    "-i", "color=size=1920x1080:rate=30:color=black",
-    "-f", "lavfi",
-    "-i", "anullsrc=channel_layout=stereo:sample_rate=44100",
-    "-c:v", "libx264",
-    "-preset", "veryfast",
-    "-tune", "zerolatency",
-    "-c:a", "libopus",
-    "-ar", "44100",
-    "-b:a", "128k",
-    "-ac", "2",
-    "-shortest",
-    "-f", "mpegts",
-    EGRESS_STREAM_URL
+    '-re',
+    '-f', 'lavfi', '-i', 'color=size=1280x720:rate=30:color=black',
+    '-f', 'lavfi', '-i', 'anullsrc=channel_layout=stereo:sample_rate=48000',
+    '-c:v', 'libx264', '-preset', 'veryfast', '-tune', 'zerolatency', '-g', '60', '-b:v', '1500k',
+    '-f', 'rtp', '-payload_type', '96', OUT_VIDEO_STREAM,
+    '-c:a', 'libopus', '-b:a', '96k', '-ar', '48000', '-ac', '2',
+    '-f', 'rtp', '-payload_type', '111', OUT_AUDIO_STREAM
 ];
 
 let ff: ffContainer;
 
-export default async function ffmpegManager(server: FastifyInstance) {
+export default async function startFFmpegManager() {
     await startBlankStream();
     await tryStartRealStream();
 }
@@ -61,10 +47,7 @@ async function tryStartRealStream() {
                 };
 
                 ff.process.on("exit", async () => {
-                    ff = {
-                        type: "blank",
-                        process: spawn("ffmpeg", blankArgs)
-                    };
+                    await startBlankStream();
                     await tryStartRealStream();
                 });
                 break;
@@ -80,7 +63,7 @@ async function checkStream(): Promise<boolean> {
             "-v", "error",
             "-show_entries", "format=duration",
             "-of", "default=noprint_wrappers=1:nokey=1",
-            INGRESS_STREAM_URL
+            LOCAL_STREAM_URL
         ])
 
         probe.on('close', (code) => {
