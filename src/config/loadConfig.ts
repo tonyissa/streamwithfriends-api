@@ -8,9 +8,9 @@ export default function loadConfig() {
     if (result.error)
         throw new Error(`Failed to load .env file from path: ${envPath}: ${result.error.message}`);
 
-    const { DATABASE_URL, JWT_SECRET, NGROK_TOKEN, NGROK_STATIC_URL, LIVEKIT_HOST_URL, LIVEKIT_API_KEY, LIVEKIT_API_SECRET, LOCAL_STREAM_URL } = process.env;
+    const { DATABASE_URL, JWT_SECRET, NGROK_TOKEN, NGROK_STATIC_URL, LIVEKIT_HOST_URL, LIVEKIT_API_KEY, LIVEKIT_API_SECRET, LOCAL_STREAM_PORT } = process.env;
 
-    if (!DATABASE_URL || !JWT_SECRET || !NGROK_TOKEN || !NGROK_STATIC_URL || !LIVEKIT_HOST_URL || !LIVEKIT_API_KEY || !LIVEKIT_API_SECRET || !LOCAL_STREAM_URL)
+    if (!DATABASE_URL || !JWT_SECRET || !NGROK_TOKEN || !NGROK_STATIC_URL || !LIVEKIT_HOST_URL || !LIVEKIT_API_KEY || !LIVEKIT_API_SECRET || !LOCAL_STREAM_PORT)
         throw new Error('Failed to load some environmental variables.')
 }
 
@@ -26,7 +26,7 @@ declare global {
             LIVEKIT_HOST_URL: string;
             LIVEKIT_API_KEY: string;
             LIVEKIT_API_SECRET: string;
-            LOCAL_STREAM_URL: string;
+            LOCAL_STREAM_PORT: string;
         }
     }
 }
