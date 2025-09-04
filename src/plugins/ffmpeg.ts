@@ -5,7 +5,7 @@ import startFFmpegManager from "../utils/ffmpegManager";
 
 function ffmpegPlugin(server: FastifyInstance) {
     server.addHook('onReady', async () => {
-        startFFmpegManager()
+        startFFmpegManager(await server.getIngress())
             .catch(err => server.log.error(err));
     })
 }

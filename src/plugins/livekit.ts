@@ -21,6 +21,7 @@ const ingressOpts = {
 const livekitPlugin: FastifyPluginAsync = async (server) => {
     server.decorate("getIngress");
     server.addHook("onReady", async () => {
+        (await ingressClient.listIngress()).forEach(async (i) => await ingressClient.deleteIngress(i.ingressId));
         await roomService.createRoom({ name: "movie-room", emptyTimeout: 60 * 5, departureTimeout: 60 * 5 });
         server.log.info("Livekit room 'movie-room' created");
         const ingress = await ingressClient.createIngress(IngressInput.WHIP_INPUT, ingressOpts);

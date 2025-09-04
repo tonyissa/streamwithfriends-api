@@ -11,6 +11,7 @@ import cors from "@fastify/cors";
 import originCB from "./utils/originCb";
 import livekit from "./plugins/livekit";
 import ffmpeg from './plugins/ffmpeg';
+import { shutdownPionService } from "./utils/pion";
 
 loadConfig();
 const server = fastify({ logger: { level: "debug" }, trustProxy: true });
@@ -51,18 +52,21 @@ const start = async () => {
 start();
 
 process.on('SIGINT', async () => {
+    await shutdownPionService();
     await server.close();
     await ngrok.disconnect();
     process.exit(0);
 });
 
 process.on('SIGTERM', async () => {
+    await shutdownPionService();
     await server.close();
     await ngrok.disconnect();
     process.exit(0);
 });
 
 process.on('exit', async () => {
+    await shutdownPionService();
     await server.close();
     await ngrok.disconnect();
     process.exit(0);

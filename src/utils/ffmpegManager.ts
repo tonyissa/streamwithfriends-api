@@ -1,14 +1,18 @@
 import { ChildProcessWithoutNullStreams, spawn } from "child_process";
+import { IngressInfo } from "livekit-server-sdk";
+import { startPionService } from "./pion";
 
-const { LOCAL_STREAM_URL, OUT_AUDIO_STREAM, OUT_VIDEO_STREAM } = process.env;
+const { LOCAL_STREAM_PORT, OUT_AUDIO_PORT, OUT_VIDEO_PORT } = process.env;
 
 const realArgs = [
-    '-re',
-    '-i', LOCAL_STREAM_URL,
-    '-c:v', 'libx264', '-preset', 'veryfast', '-tune', 'zerolatency', '-g', '60', '-b:v', '3500k',
+    '-report',
+    '-i', `http://127.0.0.1:${LOCAL_STREAM_PORT}`,
+    '-async', '1', '-vsync', '1',
+    '-c:v', 'libvpx', '-preset', 'veryfast', '-g', '60', '-keyint_min', '60',
+    '-b:v', '3500k', '-maxrate', '3500k', '-bufsize', '7000k',
+    '-map', '0:v:0', '-f', 'rtp', '-payload_type', '96', `rtp://127.0.0.1:${OUT_VIDEO_PORT}`,
     '-c:a', 'libopus', '-b:a', '128k', '-ar', '48000', '-ac', '2',
-    '-f', 'rtp', '-payload_type', '96', OUT_VIDEO_STREAM,
-    '-f', 'rtp', '-payload_type', '111', OUT_AUDIO_STREAM
+    '-map', '0:a:0', '-f', 'rtp', '-payload_type', '111', `rtp://127.0.0.1:${OUT_AUDIO_PORT}`
 ];
 
 const blankArgs = [
@@ -16,14 +20,22 @@ const blankArgs = [
     '-f', 'lavfi', '-i', 'color=size=1280x720:rate=30:color=black',
     '-f', 'lavfi', '-i', 'anullsrc=channel_layout=stereo:sample_rate=48000',
     '-c:v', 'libx264', '-preset', 'veryfast', '-tune', 'zerolatency', '-g', '60', '-b:v', '1500k',
-    '-f', 'rtp', '-payload_type', '96', OUT_VIDEO_STREAM,
+    '-map', '0:v:0', '-f', 'rtp', '-payload_type', '96', `rtp://127.0.0.1:${OUT_VIDEO_PORT}`,
     '-c:a', 'libopus', '-b:a', '96k', '-ar', '48000', '-ac', '2',
-    '-f', 'rtp', '-payload_type', '111', OUT_AUDIO_STREAM
+    '-map', '1:a:0', '-f', 'rtp', '-payload_type', '111', `rtp://127.0.0.1:${OUT_AUDIO_PORT}`
 ];
 
 let ff: ffContainer;
+let startRequest: StartRequest;
 
-export default async function startFFmpegManager() {
+export default async function startFFmpegManager(ing: IngressInfo) {
+    startRequest = {
+        ingestUrl: `${ing.url}/${ing.streamKey}`,
+        audioPort: Number(OUT_AUDIO_PORT),
+        videoPort: Number(OUT_VIDEO_PORT)
+    };
+
+    await startPionService(startRequest);
     await startBlankStream();
     await tryStartRealStream();
 }
@@ -63,7 +75,7 @@ async function checkStream(): Promise<boolean> {
             "-v", "error",
             "-show_entries", "format=duration",
             "-of", "default=noprint_wrappers=1:nokey=1",
-            LOCAL_STREAM_URL
+            `http://127.0.0.1:${LOCAL_STREAM_PORT}`
         ])
 
         probe.on('close', (code) => {
@@ -80,4 +92,10 @@ async function checkStream(): Promise<boolean> {
 interface ffContainer {
     type: "blank" | "real";
     process: ChildProcessWithoutNullStreams;
+}
+
+export interface StartRequest {
+    ingestUrl: string;
+    audioPort: number;
+    videoPort: number;
 }

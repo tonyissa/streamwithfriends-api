@@ -16,9 +16,10 @@ export default function loadConfig() {
         LIVEKIT_HOST_URL, 
         LIVEKIT_API_KEY, 
         LIVEKIT_API_SECRET, 
-        LOCAL_STREAM_URL,
-        OUT_AUDIO_STREAM,
-        OUT_VIDEO_STREAM
+        LOCAL_STREAM_PORT,
+        OUT_AUDIO_PORT,
+        OUT_VIDEO_PORT,
+        PION_SERVER_PORT
     } = process.env;
 
     if (
@@ -29,9 +30,10 @@ export default function loadConfig() {
         !LIVEKIT_HOST_URL || 
         !LIVEKIT_API_KEY || 
         !LIVEKIT_API_SECRET || 
-        !LOCAL_STREAM_URL ||
-        !OUT_AUDIO_STREAM ||
-        !OUT_VIDEO_STREAM
+        !LOCAL_STREAM_PORT ||
+        !OUT_AUDIO_PORT ||
+        !OUT_VIDEO_PORT ||
+        !PION_SERVER_PORT
     ) throw new Error('Failed to load some environmental variables.')
 }
 
@@ -47,9 +49,10 @@ declare global {
             LIVEKIT_HOST_URL: string;
             LIVEKIT_API_KEY: string;
             LIVEKIT_API_SECRET: string;
-            LOCAL_STREAM_URL: string;
-            OUT_AUDIO_STREAM: string;
-            OUT_VIDEO_STREAM: string;
+            LOCAL_STREAM_PORT: string;
+            OUT_AUDIO_PORT: string;
+            OUT_VIDEO_PORT: string;
+            PION_SERVER_PORT: string;
         }
     }
 }
